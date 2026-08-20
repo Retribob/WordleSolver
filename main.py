@@ -6,15 +6,20 @@ STARTING_WORD = "SALET"
 
 
 #read all valid wordle words
-with open("words.txt") as f:
-    words = [line.strip().upper() for line in f if len(line.strip()) == 5]
-print(len(words), "words loaded")
+with open("valid_word_choices.txt") as f:
+    word_choices = [line.strip().upper() for line in f if len(line.strip()) == 5]
+print(len(word_choices), "words choices loaded")
+
+with open("valid_word_answers.txt") as f:
+    word_answers = [line.strip().upper() for line in f if len(line.strip()) == 5]
+print(len(word_answers), "word answers loaded")
 
 def play():
 
     #candidates is a list containing all remaining words after filtering from 
     #previous feedback
-    candidates = words
+    candidates = word_answers
+    choices = word_choices
 
     print(f"Your starting word is {STARTING_WORD}.\n")
     word = STARTING_WORD
@@ -31,6 +36,9 @@ def play():
         result = result.upper()
         if result == 'EXIT':
             break
+        if result == 'GGGGG':
+            print("You win!")
+            break
 
         print(f"Your input is {result}")
 
@@ -38,7 +46,11 @@ def play():
             feedback.append((word[i], result[i]))
 
         candidates = filter_candidates(candidates, feedback)
-        word = guess_word(candidates, feedback)
+        if not candidates:
+            print("No candidates match that feedback — check your input and try again.")
+            break
+
+        word = guess_word(candidates, choices, feedback)
         print(f"Your next word is {word}")
 
 def filter_candidates(candidates, feedback):
@@ -78,7 +90,9 @@ def filter_candidates(candidates, feedback):
     return filtered_candidates
 
 
-def guess_word(candidates, feedback):
+def guess_word(candidates, choices, feedback):
+    if (len(candidates) == 1): return candidates[0]
+
     frequency = count_letters(candidates)
     word_score = {}
 
@@ -86,7 +100,7 @@ def guess_word(candidates, feedback):
         if status == 'G' or status == 'Y':
             frequency[letter] -= len(candidates)
 
-    for word in candidates:
+    for word in choices:
         score = 0
         letter_count = Counter(word)
         for letter in letter_count:
